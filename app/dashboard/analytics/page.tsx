@@ -1,16 +1,10 @@
 import AnalyticsDashboard from "@/components/analytics/analytics-dashboard"
 import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+import { requireManager } from "@/lib/utils/require-manager"
 
 export default async function AnalyticsPage() {
+  const user = await requireManager()
   const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) {
-    redirect("/auth/login")
-  }
 
   // Get all tasks for analytics
   const { data: tasks } = await supabase

@@ -79,13 +79,13 @@ export default function TeamManagement({ roles, teamMembers, userId }: TeamManag
       setEditingMember(member)
       setMemberEmail(member.email)
       setMemberName(member.full_name || "")
-      setMemberRoleId(member.role_id || "")
+      setMemberRoleId(member.role_id && member.role_id !== "" ? member.role_id : "none")
       setMemberStatus(member.status)
     } else {
       setEditingMember(null)
       setMemberEmail("")
       setMemberName("")
-      setMemberRoleId("")
+      setMemberRoleId("none")
       setMemberStatus("active")
     }
     setIsMemberDialogOpen(true)
@@ -97,62 +97,103 @@ export default function TeamManagement({ roles, teamMembers, userId }: TeamManag
 
     const roleData = {
       user_id: userId,
-      name: roleName,
-      description: roleDescription || null,
+      name: roleName.trim(),
+      description: roleDescription?.trim() || null,
     }
 
-    if (editingRole) {
-      await supabase.from("roles").update(roleData).eq("id", editingRole.id)
-    } else {
-      await supabase.from("roles").insert(roleData)
-    }
+    try {
+      if (editingRole) {
+        const { error } = await supabase.from("roles").update(roleData).eq("id", editingRole.id)
+        if (error) {
+          console.error("Error updating role:", error)
+          alert(`Error updating role: ${error.message}`)
+          return
+        }
+      } else {
+        const { error } = await supabase.from("roles").insert(roleData)
+        if (error) {
+          console.error("Error creating role:", error)
+          alert(`Error creating role: ${error.message}`)
+          return
+        }
+      }
 
-    setIsRoleDialogOpen(false)
-    router.refresh()
+      setIsRoleDialogOpen(false)
+      // Reset form
+      setRoleName("")
+      setRoleDescription("")
+      setEditingRole(null)
+      router.refresh()
+    } catch (error) {
+      console.error("Unexpected error:", error)
+      alert(`Unexpected error: ${error instanceof Error ? error.message : "Unknown error"}`)
+    }
   }
 
   const handleMemberSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const supabase = createClient()
 
-    if (editingMember) {
-      const memberData = {
-        email: memberEmail,
-        full_name: memberName || null,
-        role_id: memberRoleId || null,
-        status: memberStatus,
-      }
-      await supabase.from("team_members").update(memberData).eq("id", editingMember.id)
-    } else {
-      // Generate invite token for new members
-      // Create a random token
-      const inviteToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("")
-      
-      const memberData = {
-        manager_id: userId,
-        email: memberEmail,
-        full_name: memberName || null,
-        role_id: memberRoleId || null,
-        status: memberStatus,
-        invite_token: inviteToken,
-        invited_at: new Date().toISOString(),
-      }
-      
-      const { data, error } = await supabase.from("team_members").insert(memberData).select().single()
-      
-      if (!error && data) {
-        // Generate invite URL
-        const inviteUrl = `${window.location.origin}/auth/accept-invite?token=${inviteToken}`
-        alert(`Team member invited! Share this link:\n\n${inviteUrl}\n\nThe team member can use this link to create their account and join your team.`)
-      } else if (error) {
-        alert(`Error: ${error.message}`)
-      }
-    }
+    try {
+      const roleIdValue = memberRoleId && memberRoleId !== "none" && memberRoleId !== "" ? memberRoleId : null
 
-    setIsMemberDialogOpen(false)
-    router.refresh()
+      if (editingMember) {
+        const memberData = {
+          email: memberEmail.trim(),
+          full_name: memberName?.trim() || null,
+          role_id: roleIdValue,
+          status: memberStatus,
+        }
+        const { error } = await supabase.from("team_members").update(memberData).eq("id", editingMember.id)
+        if (error) {
+          console.error("Error updating member:", error)
+          alert(`Error updating member: ${error.message}`)
+          return
+        }
+      } else {
+        // Generate invite token for new members
+        // Create a random token
+        const inviteToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("")
+        
+        const memberData = {
+          manager_id: userId,
+          email: memberEmail.trim(),
+          full_name: memberName?.trim() || null,
+          role_id: roleIdValue,
+          status: memberStatus,
+          invite_token: inviteToken,
+          invited_at: new Date().toISOString(),
+        }
+        
+        const { data, error } = await supabase.from("team_members").insert(memberData).select().single()
+        
+        if (error) {
+          console.error("Error creating member:", error)
+          alert(`Error creating member: ${error.message}`)
+          return
+        }
+        
+        if (data) {
+          // Generate invite URL
+          const inviteUrl = `${window.location.origin}/auth/accept-invite?token=${inviteToken}`
+          alert(`Team member invited! Share this link:\n\n${inviteUrl}\n\nThe team member can use this link to create their account and join your team.`)
+        }
+      }
+
+      setIsMemberDialogOpen(false)
+      // Reset form
+      setMemberEmail("")
+      setMemberName("")
+      setMemberRoleId("none")
+      setMemberStatus("active")
+      setEditingMember(null)
+      router.refresh()
+    } catch (error) {
+      console.error("Unexpected error:", error)
+      alert(`Unexpected error: ${error instanceof Error ? error.message : "Unknown error"}`)
+    }
   }
 
   const handleDeleteRole = async (id: string) => {
@@ -227,17 +268,24 @@ export default function TeamManagement({ roles, teamMembers, userId }: TeamManag
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="member-role">Role</Label>
-                        <Select value={memberRoleId} onValueChange={setMemberRoleId}>
+                        <Select 
+                          value={memberRoleId && memberRoleId !== "" ? memberRoleId : "none"} 
+                          onValueChange={(value) => setMemberRoleId(value === "none" ? "" : value)}
+                        >
                           <SelectTrigger id="member-role">
                             <SelectValue placeholder="Select a role" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">No Role</SelectItem>
-                            {roles.map((role) => (
-                              <SelectItem key={role.id} value={role.id}>
-                                {role.name}
-                              </SelectItem>
-                            ))}
+                            <SelectItem value="none">No Role</SelectItem>
+                            {roles.length > 0 ? (
+                              roles.map((role) => (
+                                <SelectItem key={role.id} value={role.id}>
+                                  {role.name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="none" disabled>No roles available - create one first</SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
                       </div>

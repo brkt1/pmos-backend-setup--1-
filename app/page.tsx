@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
+import { getDashboardUrl } from "@/lib/utils/user-role"
 import Image from "next/image"
 import Link from "next/link"
 import { redirect } from "next/navigation"
@@ -12,7 +13,8 @@ export default async function HomePage() {
   } = await supabase.auth.getUser()
 
   if (user) {
-    redirect("/dashboard")
+    const dashboardUrl = await getDashboardUrl(user.id)
+    redirect(dashboardUrl)
   }
 
   return (

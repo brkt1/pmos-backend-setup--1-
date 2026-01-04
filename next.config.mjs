@@ -13,11 +13,6 @@ const nextConfig = {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
-  // Add empty turbopack config to silence the warning
-  // The PWA plugin adds webpack config, but we want to use Turbopack
-  experimental: {
-    turbo: {},
-  },
 }
 
 // Only enable PWA in production

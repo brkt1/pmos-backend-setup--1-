@@ -1,16 +1,10 @@
 import RecurringTasksList from "@/components/recurring-tasks/recurring-tasks-list"
 import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+import { requireManager } from "@/lib/utils/require-manager"
 
 export default async function RecurringTasksPage() {
+  const user = await requireManager()
   const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) {
-    redirect("/auth/login")
-  }
 
   const { data: recurringTasks } = await supabase
     .from("recurring_tasks")

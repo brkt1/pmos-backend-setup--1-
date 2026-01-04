@@ -1,16 +1,10 @@
 import TeamManagement from "@/components/team/team-management"
 import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+import { requireManager } from "@/lib/utils/require-manager"
 
 export default async function TeamPage() {
+  const user = await requireManager()
   const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) {
-    redirect("/auth/login")
-  }
 
   // Get roles
   const { data: roles } = await supabase

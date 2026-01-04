@@ -1,16 +1,10 @@
 import TaskTemplatesList from "@/components/templates/task-templates-list"
 import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+import { requireManager } from "@/lib/utils/require-manager"
 
 export default async function TemplatesPage() {
+  const user = await requireManager()
   const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) {
-    redirect("/auth/login")
-  }
 
   const { data: templates } = await supabase
     .from("task_templates")

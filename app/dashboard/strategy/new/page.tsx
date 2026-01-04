@@ -1,16 +1,8 @@
 import StrategyForm from "@/components/strategy/strategy-form"
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+import { requireManager } from "@/lib/utils/require-manager"
 
 export default async function NewStrategyPage() {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) {
-    redirect("/auth/login")
-  }
+  const user = await requireManager()
 
   return (
     <div className="container mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4 max-w-4xl">

@@ -2,17 +2,11 @@ import DailyReviewsList from "@/components/reviews/daily-reviews-list"
 import WeeklyReviewsList from "@/components/reviews/weekly-reviews-list"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+import { requireManager } from "@/lib/utils/require-manager"
 
 export default async function ReviewsPage() {
+  const user = await requireManager()
   const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) {
-    redirect("/auth/login")
-  }
 
   // Get last 30 days of daily reviews
   const thirtyDaysAgo = new Date()

@@ -1,18 +1,12 @@
 import StrategyList from "@/components/strategy/strategy-list"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
+import { requireManager } from "@/lib/utils/require-manager"
 import Link from "next/link"
-import { redirect } from "next/navigation"
 
 export default async function StrategyPage() {
+  const user = await requireManager()
   const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) {
-    redirect("/auth/login")
-  }
 
   // Get current month/year
   const now = new Date()

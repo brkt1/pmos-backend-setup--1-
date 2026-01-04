@@ -1,34 +1,10 @@
 import DailyDashboard from "@/components/dashboard/daily-dashboard"
 import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+import { requireManager } from "@/lib/utils/require-manager"
 
 export default async function DashboardPage() {
+  const user = await requireManager()
   const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) {
-    redirect("/auth/login")
-  }
-
-  // Check if user is a team member only (not a manager)
-  const { data: teamMember } = await supabase
-    .from("team_members")
-    .select("id")
-    .eq("user_id", user.id)
-    .single()
-
-  const { data: isManager } = await supabase
-    .from("users")
-    .select("id")
-    .eq("id", user.id)
-    .single()
-
-  // Redirect team members to their dashboard
-  if (teamMember && !isManager) {
-    redirect("/dashboard/team-member")
-  }
 
   const today = new Date().toISOString().split("T")[0]
 

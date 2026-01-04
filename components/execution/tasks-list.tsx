@@ -274,12 +274,12 @@ export default function TasksList({
               {templates.length > 0 && !editingTask && (
                 <div className="grid gap-2">
                   <Label htmlFor="template">Create from Template (Optional)</Label>
-                  <Select value={selectedTemplate} onValueChange={loadTemplate}>
+                  <Select value={selectedTemplate || "none"} onValueChange={(value) => value === "none" ? setSelectedTemplate("") : loadTemplate(value)}>
                     <SelectTrigger id="template">
                       <SelectValue placeholder="Select a template..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None - Create from scratch</SelectItem>
+                      <SelectItem value="none">None - Create from scratch</SelectItem>
                       {templates.map((template) => (
                         <SelectItem key={template.id} value={template.id}>
                           {template.name}
@@ -311,7 +311,7 @@ export default function TasksList({
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="project">Project</Label>
-                <Select value={projectId} onValueChange={setProjectId}>
+                <Select value={projectId || "none"} onValueChange={(value) => setProjectId(value === "none" ? "" : value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a project (optional)" />
                   </SelectTrigger>
@@ -328,12 +328,12 @@ export default function TasksList({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="assigned-to">Assign To</Label>
-                  <Select value={assignedTo} onValueChange={setAssignedTo}>
+                  <Select value={assignedTo || "none"} onValueChange={(value) => setAssignedTo(value === "none" ? "" : value)}>
                     <SelectTrigger id="assigned-to">
                       <SelectValue placeholder="Unassigned" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Unassigned</SelectItem>
+                      <SelectItem value="none">Unassigned</SelectItem>
                       {teamMembers.map((member) => (
                         <SelectItem key={member.id} value={member.id}>
                           {member.full_name || member.email}

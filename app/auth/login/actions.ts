@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { getDashboardUrl } from "@/lib/utils/user-role"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
@@ -23,11 +24,14 @@ export async function loginAction(formData: FormData) {
     return { error: error.message }
   }
 
-  if (data.session) {
+  if (data.session && data.user) {
     // Revalidate to ensure fresh data
     revalidatePath("/dashboard")
-    // Redirect to dashboard - cookies are set by the server client
-    redirect("/dashboard")
+    revalidatePath("/dashboard/team-member")
+    
+    // Check user role and redirect to appropriate dashboard
+    const dashboardUrl = await getDashboardUrl(data.user.id)
+    redirect(dashboardUrl)
   }
 
   return { error: "Login failed" }

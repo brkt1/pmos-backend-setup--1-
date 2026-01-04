@@ -91,7 +91,8 @@ export default function AcceptInvitePage() {
           // User is created but invite linking failed - they can still login
         }
 
-        router.push("/auth/sign-up-success")
+        // Redirect to team member dashboard after successful signup
+        router.push("/dashboard/team-member")
       }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
