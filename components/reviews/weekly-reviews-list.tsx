@@ -2,22 +2,22 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
+import { Calendar, Plus } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { Plus, Calendar } from "lucide-react"
+import { useState } from "react"
 
 interface WeeklyReview {
   id: string
@@ -76,16 +76,16 @@ export default function WeeklyReviewsList({
 
   return (
     <div>
-      <div className="mb-4 flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Weekly Reviews</h2>
+      <div className="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+        <h2 className="text-xl sm:text-2xl font-semibold">Weekly Reviews</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               New Weekly Review
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
             <DialogHeader>
               <DialogTitle>Weekly Review</DialogTitle>
               <DialogDescription>
@@ -138,11 +138,11 @@ export default function WeeklyReviewsList({
                 />
               </div>
 
-              <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+              <div className="flex flex-col sm:flex-row gap-2 justify-end">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="w-full sm:w-auto">
                   Cancel
                 </Button>
-                <Button type="submit">Save Weekly Review</Button>
+                <Button type="submit" className="w-full sm:w-auto">Save Weekly Review</Button>
               </div>
             </form>
           </DialogContent>

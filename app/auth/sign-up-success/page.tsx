@@ -1,6 +1,7 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import Image from "next/image"
+import Link from "next/link"
 
 export default function SignUpSuccessPage() {
   return (
@@ -8,6 +9,9 @@ export default function SignUpSuccessPage() {
       <div className="w-full max-w-sm">
         <Card>
           <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <Image src="/Logo.svg" alt="PMOS Logo" width={64} height={64} className="h-16 w-16" />
+            </div>
             <CardTitle className="text-2xl font-bold">Check Your Email</CardTitle>
             <CardDescription>We&apos;ve sent you a confirmation link</CardDescription>
           </CardHeader>

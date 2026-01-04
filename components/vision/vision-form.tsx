@@ -2,14 +2,14 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 import { X } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 interface VisionFormProps {
   initialData: {
@@ -109,7 +109,7 @@ export default function VisionForm({ initialData, userId }: VisionFormProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   placeholder="Add a core value..."
                   value={newValue}
@@ -120,8 +120,9 @@ export default function VisionForm({ initialData, userId }: VisionFormProps) {
                       handleAddValue()
                     }
                   }}
+                  className="flex-1"
                 />
-                <Button type="button" onClick={handleAddValue}>
+                <Button type="button" onClick={handleAddValue} className="w-full sm:w-auto shrink-0">
                   Add
                 </Button>
               </div>
@@ -151,7 +152,7 @@ export default function VisionForm({ initialData, userId }: VisionFormProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   placeholder="Add a non-negotiable..."
                   value={newNonNegotiable}
@@ -162,8 +163,9 @@ export default function VisionForm({ initialData, userId }: VisionFormProps) {
                       handleAddNonNegotiable()
                     }
                   }}
+                  className="flex-1"
                 />
-                <Button type="button" onClick={handleAddNonNegotiable}>
+                <Button type="button" onClick={handleAddNonNegotiable} className="w-full sm:w-auto shrink-0">
                   Add
                 </Button>
               </div>
@@ -192,7 +194,7 @@ export default function VisionForm({ initialData, userId }: VisionFormProps) {
 
         {error && <p className="text-sm text-red-500">{error}</p>}
 
-        <Button type="submit" size="lg" disabled={isLoading}>
+        <Button type="submit" size="lg" disabled={isLoading} className="w-full sm:w-auto">
           {isLoading ? "Saving..." : initialData?.id ? "Update Vision" : "Create Vision"}
         </Button>
       </div>

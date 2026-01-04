@@ -2,11 +2,12 @@
 
 import type React from "react"
 
-import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { createClient } from "@/lib/supabase/client"
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -53,12 +54,15 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6">
+    <div className="flex min-h-svh w-full items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-sm">
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Get Started</CardTitle>
-            <CardDescription>Create your Personal Management OS account</CardDescription>
+            <div className="flex justify-center mb-3 sm:mb-4">
+              <Image src="/Logo.svg" alt="PMOS Logo" width={64} height={64} className="h-12 w-12 sm:h-16 sm:w-16" />
+            </div>
+            <CardTitle className="text-xl sm:text-2xl font-bold">Get Started</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Create your Personal Management OS account</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSignUp}>

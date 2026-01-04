@@ -1,6 +1,6 @@
+import DailyDashboard from "@/components/dashboard/daily-dashboard"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import DailyDashboard from "@/components/dashboard/daily-dashboard"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -49,7 +49,7 @@ export default async function DashboardPage() {
     .limit(3)
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-7xl">
+    <div className="container mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4 max-w-7xl">
       <DailyDashboard
         dashboard={dashboard}
         behaviorLogs={behaviorLogs || []}

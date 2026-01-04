@@ -1,12 +1,12 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import Link from "next/link"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
 import { Trash2 } from "lucide-react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 interface Strategy {
   id: string
@@ -57,13 +57,15 @@ export default function StrategyList({ strategies }: { strategies: Strategy[] })
       {strategies.map((strategy) => (
         <Card key={strategy.id}>
           <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <Badge className={priorityColors[strategy.priority as 1 | 2 | 3]}>Priority {strategy.priority}</Badge>
-                <CardTitle className="text-xl">{strategy.title}</CardTitle>
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <Badge className={`${priorityColors[strategy.priority as 1 | 2 | 3]} shrink-0`}>
+                  Priority {strategy.priority}
+                </Badge>
+                <CardTitle className="text-lg sm:text-xl truncate">{strategy.title}</CardTitle>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" asChild>
+              <div className="flex gap-2 shrink-0">
+                <Button variant="outline" size="sm" asChild className="flex-1 sm:flex-initial">
                   <Link href={`/dashboard/strategy/${strategy.id}`}>Edit</Link>
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => handleDelete(strategy.id)}>

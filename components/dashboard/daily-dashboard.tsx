@@ -1,15 +1,15 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
+import { AlertCircle, Calendar, CheckCircle2, Target, TrendingUp, Users, X } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { Calendar, Target, CheckCircle2, Users, TrendingUp, AlertCircle, X } from "lucide-react"
+import { useState } from "react"
 
 interface DashboardProps {
   dashboard: {
@@ -136,11 +136,17 @@ export default function DailyDashboard({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-bold">Manager Mode: On</h1>
-          <p className="text-muted-foreground mt-1">
+    <div className="space-y-6 sm:space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4 pb-4 sm:pb-6 border-b">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+            <div className="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-green-500 animate-pulse shrink-0"></div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent truncate">
+              Manager Mode: On
+            </h1>
+          </div>
+          <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
             {new Date(today).toLocaleDateString("en-US", {
               weekday: "long",
               year: "numeric",
@@ -149,136 +155,295 @@ export default function DailyDashboard({
             })}
           </p>
         </div>
-        <Badge className="text-base px-4 py-2">Daily Control Layer</Badge>
+        <Badge variant="secondary" className="text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-2.5 font-semibold w-fit">
+          Daily Control Layer
+        </Badge>
       </div>
 
       {/* Morning Checklist */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Target className="h-5 w-5" />
-              <CardTitle>Direction Check</CardTitle>
-            </div>
-            <CardDescription>What are today&apos;s top 3 priorities?</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {topPriorities.map((priority, index) => (
-              <Input
-                key={index}
-                placeholder={`Priority ${index + 1}`}
-                value={priority}
-                onChange={(e) => {
-                  const newPriorities = [...topPriorities]
-                  newPriorities[index] = e.target.value
-                  setTopPriorities(newPriorities)
-                }}
-              />
-            ))}
-          </CardContent>
-        </Card>
+      <div>
+        <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 flex items-center gap-2">
+          <div className="h-1 w-1 rounded-full bg-primary shrink-0"></div>
+          Morning Checklist
+        </h2>
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
+          <Card className="border-2 hover:border-primary/50 transition-colors">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Target className="h-5 w-5 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-lg sm:text-xl">Direction Check</CardTitle>
+                  <CardDescription className="mt-1 text-xs sm:text-sm">What are today&apos;s top 3 priorities?</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {topPriorities.map((priority, index) => (
+                <div key={index} className="relative">
+                  <div className="absolute left-3 top-3 text-xs font-semibold text-muted-foreground">
+                    {index + 1}
+                  </div>
+                  <Input
+                    placeholder={`Priority ${index + 1}`}
+                    value={priority}
+                    onChange={(e) => {
+                      const newPriorities = [...topPriorities]
+                      newPriorities[index] = e.target.value
+                      setTopPriorities(newPriorities)
+                    }}
+                    className="pl-8"
+                  />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              <CardTitle>People Check</CardTitle>
-            </div>
-            <CardDescription>Who needs guidance or follow-up today?</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Add person..."
-                value={newPerson}
-                onChange={(e) => setNewPerson(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault()
-                    addPerson()
-                  }
-                }}
-              />
-              <Button onClick={addPerson}>Add</Button>
-            </div>
-            {peopleToCheck.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {peopleToCheck.map((person, index) => (
-                  <div key={index} className="flex items-center gap-2 bg-secondary px-3 py-1.5 rounded-md">
-                    <span className="text-sm">{person}</span>
-                    <button
-                      type="button"
-                      onClick={() => setPeopleToCheck(peopleToCheck.filter((_, i) => i !== index))}
-                      className="hover:text-destructive"
+          <Card className="border-2 hover:border-primary/50 transition-colors">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-500/10">
+                  <Users className="h-5 w-5 text-blue-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">People Check</CardTitle>
+                  <CardDescription className="mt-1">Who needs guidance or follow-up today?</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Add person..."
+                  value={newPerson}
+                  onChange={(e) => setNewPerson(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      addPerson()
+                    }
+                  }}
+                  className="flex-1"
+                />
+                <Button onClick={addPerson} className="shrink-0">Add</Button>
+              </div>
+              {peopleToCheck.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {peopleToCheck.map((person, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-3 py-2 rounded-lg group hover:bg-blue-500/20 transition-colors"
                     >
-                      <X className="h-4 w-4" />
-                    </button>
+                      <span className="text-sm font-medium">{person}</span>
+                      <button
+                        type="button"
+                        onClick={() => setPeopleToCheck(peopleToCheck.filter((_, i) => i !== index))}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 hover:border-primary/50 transition-colors">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-green-500/10">
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Task Check</CardTitle>
+                  <CardDescription className="mt-1">Today&apos;s critical tasks</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {todaysTasks.length === 0 ? (
+                <div className="text-center py-8">
+                  <CheckCircle2 className="h-12 w-12 mx-auto text-muted-foreground/50 mb-2" />
+                  <p className="text-sm text-muted-foreground">No tasks scheduled for today</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {todaysTasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className="flex items-center gap-3 p-3 bg-secondary/50 border border-border rounded-lg hover:bg-secondary transition-colors"
+                    >
+                      <Badge
+                        variant={
+                          task.status === "completed"
+                            ? "default"
+                            : task.status === "in-progress"
+                              ? "secondary"
+                              : "outline"
+                        }
+                        className="shrink-0"
+                      >
+                        {task.status}
+                      </Badge>
+                      <span className="text-sm flex-1 font-medium">{task.title}</span>
+                      {task.projects?.name && (
+                        <Badge variant="outline" className="text-xs">
+                          {task.projects.name}
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 hover:border-primary/50 transition-colors">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-purple-500/10">
+                  <TrendingUp className="h-5 w-5 text-purple-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Control Check</CardTitle>
+                  <CardDescription className="mt-1">What should I measure today?</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Add metric..."
+                  value={newMetric}
+                  onChange={(e) => setNewMetric(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      addMetric()
+                    }
+                  }}
+                  className="flex-1"
+                />
+                <Button onClick={addMetric} className="shrink-0">Add</Button>
+              </div>
+              {metricsToMeasure.length > 0 && (
+                <div className="space-y-2">
+                  {metricsToMeasure.map((metric, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg group hover:bg-purple-500/20 transition-colors"
+                    >
+                      <TrendingUp className="h-4 w-4 text-purple-500 shrink-0" />
+                      <span className="text-sm flex-1 font-medium">{metric}</span>
+                      <button
+                        type="button"
+                        onClick={() => setMetricsToMeasure(metricsToMeasure.filter((_, i) => i !== index))}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive shrink-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+        <div className="flex justify-end mt-4 sm:mt-6">
+          <Button onClick={handleSaveMorningChecklist} size="lg" className="px-4 sm:px-8 w-full sm:w-auto">
+            Save Morning Checklist
+          </Button>
+        </div>
+      </div>
+
+      {/* Active Strategies Quick View */}
+      {strategies.length > 0 && (
+        <div>
+          <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 flex items-center gap-2">
+            <div className="h-1 w-1 rounded-full bg-primary shrink-0"></div>
+            Active Strategies
+          </h2>
+          <Card className="border-2 bg-gradient-to-br from-background to-secondary/20">
+            <CardHeader>
+              <CardDescription className="text-xs sm:text-sm">Quick reference for your current priorities</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                {strategies.map((strategy) => (
+                  <div
+                    key={strategy.id}
+                    className="flex items-start gap-3 p-4 bg-card border rounded-lg hover:border-primary/50 transition-colors"
+                  >
+                    <Badge
+                      variant={strategy.priority === 1 ? "default" : strategy.priority === 2 ? "secondary" : "outline"}
+                      className="shrink-0"
+                    >
+                      P{strategy.priority}
+                    </Badge>
+                    <span className="text-sm font-medium flex-1">{strategy.title}</span>
                   </div>
                 ))}
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5" />
-              <CardTitle>Task Check</CardTitle>
+      {/* Daily Behavior Reminders */}
+      <div>
+        <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 flex items-center gap-2">
+          <div className="h-1 w-1 rounded-full bg-primary shrink-0"></div>
+          Daily Behavior Rules
+        </h2>
+        <Card className="border-2">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-orange-500/10">
+                <AlertCircle className="h-5 w-5 text-orange-500" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Behavior Checklist</CardTitle>
+                <CardDescription className="mt-1">Check off each behavior as you practice it today</CardDescription>
+              </div>
             </div>
-            <CardDescription>Today&apos;s critical tasks</CardDescription>
           </CardHeader>
           <CardContent>
-            {todaysTasks.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No tasks scheduled for today</p>
-            ) : (
-              <div className="space-y-2">
-                {todaysTasks.map((task) => (
-                  <div key={task.id} className="flex items-center gap-2 p-2 bg-secondary rounded-md">
-                    <Badge variant="outline">{task.status}</Badge>
-                    <span className="text-sm flex-1">{task.title}</span>
-                  </div>
-                ))}
+            {behaviorLogs.length === 0 ? (
+              <div className="text-center py-12">
+                <AlertCircle className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-sm text-muted-foreground mb-6">Initialize today&apos;s behavior tracking</p>
+                <Button onClick={handleInitializeBehaviorLogs} size="lg">
+                  Initialize Behavior Checklist
+                </Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              <CardTitle>Control Check</CardTitle>
-            </div>
-            <CardDescription>What should I measure today?</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Add metric..."
-                value={newMetric}
-                onChange={(e) => setNewMetric(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault()
-                    addMetric()
-                  }
-                }}
-              />
-              <Button onClick={addMetric}>Add</Button>
-            </div>
-            {metricsToMeasure.length > 0 && (
-              <div className="space-y-2">
-                {metricsToMeasure.map((metric, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-secondary rounded-md">
-                    <span className="text-sm flex-1">{metric}</span>
-                    <button
-                      type="button"
-                      onClick={() => setMetricsToMeasure(metricsToMeasure.filter((_, i) => i !== index))}
-                      className="hover:text-destructive"
+            ) : (
+              <div className="space-y-3">
+                {behaviorLogs.map((log) => (
+                  <div
+                    key={log.id}
+                    className={`flex items-center gap-4 p-4 rounded-lg border transition-all ${
+                      log.checked
+                        ? "bg-green-500/10 border-green-500/20"
+                        : "bg-secondary/50 border-border hover:bg-secondary"
+                    }`}
+                  >
+                    <Checkbox
+                      checked={log.checked}
+                      onCheckedChange={(checked) => handleToggleBehavior(log.id, checked as boolean)}
+                      className="h-5 w-5"
+                    />
+                    <span
+                      className={`flex-1 text-sm font-medium ${
+                        log.checked ? "line-through text-muted-foreground" : ""
+                      }`}
                     >
-                      <X className="h-4 w-4" />
-                    </button>
+                      {log.behavior_rule}
+                    </span>
+                    {log.checked && (
+                      <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
+                    )}
                   </div>
                 ))}
               </div>
@@ -287,81 +452,46 @@ export default function DailyDashboard({
         </Card>
       </div>
 
-      <Button onClick={handleSaveMorningChecklist} size="lg">
-        Save Morning Checklist
-      </Button>
-
-      {/* Active Strategies Quick View */}
-      {strategies.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Active Strategies (Quick Reference)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {strategies.map((strategy) => (
-                <div key={strategy.id} className="flex items-center gap-3">
-                  <Badge>P{strategy.priority}</Badge>
-                  <span>{strategy.title}</span>
-                </div>
-              ))}
+      {/* Evening Review */}
+      <div>
+        <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 flex items-center gap-2">
+          <div className="h-1 w-1 rounded-full bg-primary shrink-0"></div>
+          Evening Review
+        </h2>
+        <Card className="border-2 bg-gradient-to-br from-background to-secondary/20">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-indigo-500/10">
+                <Calendar className="h-5 w-5 text-indigo-500" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">End of Day Reflection</CardTitle>
+                <CardDescription className="mt-1">Reflect on today&apos;s achievements and learnings</CardDescription>
+              </div>
             </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <Textarea
+              placeholder="What was achieved? What was delayed? Why? What must be followed up tomorrow?"
+              value={eveningReview}
+              onChange={(e) => setEveningReview(e.target.value)}
+              rows={8}
+              className="resize-none"
+            />
+            <div className="flex justify-end">
+              <Button onClick={handleSaveEveningReview} size="lg" className="px-4 sm:px-8 w-full sm:w-auto">
+                {dashboard?.evening_completed ? "Update Evening Review" : "Complete Evening Review"}
+              </Button>
+            </div>
+            {dashboard?.evening_completed && (
+              <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                <CheckCircle2 className="h-4 w-4" />
+                <span>Evening review completed</span>
+              </div>
+            )}
           </CardContent>
         </Card>
-      )}
-
-      {/* Daily Behavior Reminders */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
-            <CardTitle>Daily Behavior Rules</CardTitle>
-          </div>
-          <CardDescription>Check off each behavior as you practice it today</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {behaviorLogs.length === 0 ? (
-            <div className="text-center py-4">
-              <p className="text-sm text-muted-foreground mb-4">Initialize today&apos;s behavior tracking</p>
-              <Button onClick={handleInitializeBehaviorLogs}>Initialize Behavior Checklist</Button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {behaviorLogs.map((log) => (
-                <div key={log.id} className="flex items-center gap-3 p-3 bg-secondary rounded-md">
-                  <Checkbox
-                    checked={log.checked}
-                    onCheckedChange={(checked) => handleToggleBehavior(log.id, checked as boolean)}
-                  />
-                  <span className={log.checked ? "line-through text-muted-foreground" : ""}>{log.behavior_rule}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Evening Review */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            <CardTitle>Evening Review</CardTitle>
-          </div>
-          <CardDescription>Reflect on today&apos;s achievements and learnings</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Textarea
-            placeholder="What was achieved? What was delayed? Why? What must be followed up tomorrow?"
-            value={eveningReview}
-            onChange={(e) => setEveningReview(e.target.value)}
-            rows={6}
-          />
-          <Button onClick={handleSaveEveningReview} size="lg">
-            Complete Evening Review
-          </Button>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   )
 }

@@ -2,25 +2,25 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
 import { Plus, Trash2 } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 interface Project {
   id: string
@@ -90,16 +90,16 @@ export default function ProjectsList({ projects, userId }: { projects: Project[]
 
   return (
     <div>
-      <div className="mb-4 flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Projects</h2>
+      <div className="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+        <h2 className="text-xl sm:text-2xl font-semibold">Projects</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => openDialog()}>
+            <Button onClick={() => openDialog()} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               New Project
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="w-[95vw] sm:w-full max-w-md">
             <DialogHeader>
               <DialogTitle>{editingProject ? "Edit Project" : "Create Project"}</DialogTitle>
               <DialogDescription>Organize your tasks into projects for better management</DialogDescription>
@@ -138,11 +138,11 @@ export default function ProjectsList({ projects, userId }: { projects: Project[]
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+              <div className="flex flex-col sm:flex-row gap-2 justify-end">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="w-full sm:w-auto">
                   Cancel
                 </Button>
-                <Button type="submit">{editingProject ? "Update" : "Create"}</Button>
+                <Button type="submit" className="w-full sm:w-auto">{editingProject ? "Update" : "Create"}</Button>
               </div>
             </form>
           </DialogContent>
@@ -161,15 +161,15 @@ export default function ProjectsList({ projects, userId }: { projects: Project[]
           {projects.map((project) => (
             <Card key={project.id}>
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <CardTitle className="text-lg">{project.name}</CardTitle>
-                    <Badge className={statusColors[project.status as keyof typeof statusColors]}>
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <CardTitle className="text-base sm:text-lg truncate">{project.name}</CardTitle>
+                    <Badge className={`${statusColors[project.status as keyof typeof statusColors]} text-xs sm:text-sm`}>
                       {project.status}
                     </Badge>
                   </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => openDialog(project)}>
+                  <div className="flex gap-1 shrink-0">
+                    <Button variant="ghost" size="sm" onClick={() => openDialog(project)} className="text-xs sm:text-sm">
                       Edit
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(project.id)}>

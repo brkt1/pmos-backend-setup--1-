@@ -2,25 +2,26 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import TaskComments from "@/components/tasks/task-comments"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
+import { Calendar, Download, Filter, MessageSquare, Plus, Search, Trash2, User, X } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { Plus, Trash2, Calendar, User } from "lucide-react"
+import { useState } from "react"
 
 interface Task {
   id: string
@@ -32,7 +33,10 @@ interface Task {
   status: string
   follow_up_date: string | null
   project_id: string | null
+  assigned_to: string | null
   projects?: { name: string } | null
+  team_members?: { email: string; full_name: string | null } | null
+  priority?: string
 }
 
 interface Project {
@@ -40,13 +44,21 @@ interface Project {
   name: string
 }
 
+interface TeamMember {
+  id: string
+  email: string
+  full_name: string | null
+}
+
 export default function TasksList({
   tasks,
   projects,
+  teamMembers,
   userId,
 }: {
   tasks: Task[]
   projects: Project[]
+  teamMembers: TeamMember[]
   userId: string
 }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -59,6 +71,13 @@ export default function TasksList({
   const [status, setStatus] = useState("pending")
   const [followUpDate, setFollowUpDate] = useState("")
   const [projectId, setProjectId] = useState("")
+  const [assignedTo, setAssignedTo] = useState("")
+  const [priority, setPriority] = useState("medium")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [priorityFilter, setPriorityFilter] = useState<string>("all")
+  const [projectFilter, setProjectFilter] = useState<string>("all")
+  const [expandedTask, setExpandedTask] = useState<string | null>(null)
   const router = useRouter()
 
   const openDialog = (task?: Task) => {
@@ -72,6 +91,8 @@ export default function TasksList({
       setStatus(task.status)
       setFollowUpDate(task.follow_up_date?.slice(0, 16) || "")
       setProjectId(task.project_id || "")
+      setAssignedTo(task.assigned_to || "")
+      setPriority((task as any).priority || "medium")
     } else {
       setEditingTask(null)
       setTitle("")
@@ -82,6 +103,8 @@ export default function TasksList({
       setStatus("pending")
       setFollowUpDate("")
       setProjectId("")
+      setAssignedTo("")
+      setPriority("medium")
     }
     setIsDialogOpen(true)
   }
@@ -98,8 +121,10 @@ export default function TasksList({
       deadline: deadline || null,
       standard: standard || null,
       status,
+      priority,
       follow_up_date: followUpDate || null,
       project_id: projectId || null,
+      assigned_to: assignedTo || null,
     }
 
     if (editingTask) {
@@ -127,18 +152,92 @@ export default function TasksList({
     delayed: "bg-red-500",
   }
 
+  const priorityColors = {
+    low: "bg-gray-400",
+    medium: "bg-blue-500",
+    high: "bg-orange-500",
+    urgent: "bg-red-600",
+  }
+
+  // Filter tasks
+  const filteredTasks = tasks.filter((task) => {
+    // Search filter
+    if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !(task.description?.toLowerCase().includes(searchQuery.toLowerCase()))) {
+      return false
+    }
+    
+    // Status filter
+    if (statusFilter !== "all" && task.status !== statusFilter) {
+      return false
+    }
+    
+    // Priority filter
+    if (priorityFilter !== "all" && (task as any).priority !== priorityFilter) {
+      return false
+    }
+    
+    // Project filter
+    if (projectFilter !== "all" && task.project_id !== projectFilter) {
+      return false
+    }
+    
+    return true
+  })
+
+  const hasActiveFilters = searchQuery || statusFilter !== "all" || priorityFilter !== "all" || projectFilter !== "all"
+
+  const clearFilters = () => {
+    setSearchQuery("")
+    setStatusFilter("all")
+    setPriorityFilter("all")
+    setProjectFilter("all")
+  }
+
   return (
     <div>
-      <div className="mb-4 flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Tasks</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => openDialog()}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Task
+        <div className="mb-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+          <h2 className="text-xl sm:text-2xl font-semibold">Tasks</h2>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => {
+                // Export to CSV
+                const csv = [
+                  ["Title", "Status", "Priority", "Deadline", "Project", "Assigned To", "Description"].join(","),
+                  ...filteredTasks.map((task) =>
+                    [
+                      `"${task.title}"`,
+                      task.status,
+                      (task as any).priority || "medium",
+                      task.deadline ? new Date(task.deadline).toLocaleString() : "",
+                      task.projects?.name || "",
+                      task.team_members?.full_name || task.team_members?.email || "",
+                      `"${(task.description || "").replace(/"/g, '""')}"`,
+                    ].join(",")
+                  ),
+                ].join("\n")
+                const blob = new Blob([csv], { type: "text/csv" })
+                const url = window.URL.createObjectURL(blob)
+                const a = document.createElement("a")
+                a.href = url
+                a.download = `tasks-${new Date().toISOString().split("T")[0]}.csv`
+                a.click()
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => openDialog()} className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Task
+                </Button>
+              </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
             <DialogHeader>
               <DialogTitle>{editingTask ? "Edit Task" : "Create Task"}</DialogTitle>
               <DialogDescription>Define task details with clear ownership and deadlines</DialogDescription>
@@ -180,15 +279,36 @@ export default function TasksList({
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="owner">Owner</Label>
-                  <Input
-                    id="owner"
-                    value={owner}
-                    onChange={(e) => setOwner(e.target.value)}
-                    placeholder="Who is responsible?"
-                  />
+                  <Label htmlFor="assigned-to">Assign To</Label>
+                  <Select value={assignedTo} onValueChange={setAssignedTo}>
+                    <SelectTrigger id="assigned-to">
+                      <SelectValue placeholder="Unassigned" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Unassigned</SelectItem>
+                      {teamMembers.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.full_name || member.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="priority">Priority</Label>
+                  <Select value={priority} onValueChange={setPriority}>
+                    <SelectTrigger id="priority">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="urgent">Urgent</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="status">Status</Label>
@@ -206,6 +326,15 @@ export default function TasksList({
                 </div>
               </div>
               <div className="grid gap-2">
+                <Label htmlFor="owner">Owner (Text Field)</Label>
+                <Input
+                  id="owner"
+                  value={owner}
+                  onChange={(e) => setOwner(e.target.value)}
+                  placeholder="Additional owner information (optional)"
+                />
+              </div>
+              <div className="grid gap-2">
                 <Label htmlFor="standard">Quality Standard</Label>
                 <Input
                   id="standard"
@@ -214,7 +343,7 @@ export default function TasksList({
                   placeholder="What is the expected quality?"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="deadline">Deadline</Label>
                   <Input
@@ -234,41 +363,119 @@ export default function TasksList({
                   />
                 </div>
               </div>
-              <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+              <div className="flex flex-col sm:flex-row gap-2 justify-end">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="w-full sm:w-auto">
                   Cancel
                 </Button>
-                <Button type="submit">{editingTask ? "Update" : "Create"}</Button>
+                <Button type="submit" className="w-full sm:w-auto">{editingTask ? "Update" : "Create"}</Button>
               </div>
             </form>
           </DialogContent>
         </Dialog>
+          </div>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search tasks..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            {hasActiveFilters && (
+              <Button variant="outline" onClick={clearFilters}>
+                <X className="h-4 w-4 mr-2" />
+                Clear
+              </Button>
+            )}
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[140px]">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="in-progress">In Progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="delayed">Delayed</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className="w-full sm:w-[140px]">
+                <SelectValue placeholder="Priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Priorities</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={projectFilter} onValueChange={setProjectFilter}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Project" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Projects</SelectItem>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
-      {tasks.length === 0 ? (
+      {filteredTasks.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground mb-4">No tasks yet</p>
-            <Button onClick={() => openDialog()}>Create Your First Task</Button>
+            <p className="text-muted-foreground mb-4">
+              {hasActiveFilters ? "No tasks match your filters" : "No tasks yet"}
+            </p>
+            {!hasActiveFilters && (
+              <Button onClick={() => openDialog()}>Create Your First Task</Button>
+            )}
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4">
-          {tasks.map((task) => (
+          {filteredTasks.map((task) => (
             <Card key={task.id}>
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2 flex-1">
-                    <div className="flex items-center gap-3">
-                      <Badge className={statusColors[task.status as keyof typeof statusColors]}>{task.status}</Badge>
-                      <CardTitle className="text-lg">{task.title}</CardTitle>
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                  <div className="space-y-2 flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge className={`${statusColors[task.status as keyof typeof statusColors]} text-xs sm:text-sm`}>{task.status}</Badge>
+                      {(task as any).priority && (
+                        <Badge 
+                          variant="outline" 
+                          className={`${priorityColors[(task as any).priority as keyof typeof priorityColors]} text-xs sm:text-sm`}
+                        >
+                          {(task as any).priority}
+                        </Badge>
+                      )}
+                      <CardTitle className="text-base sm:text-lg truncate">{task.title}</CardTitle>
                     </div>
                     {task.projects && (
-                      <CardDescription className="text-sm">Project: {task.projects.name}</CardDescription>
+                      <CardDescription className="text-xs sm:text-sm">Project: {task.projects.name}</CardDescription>
                     )}
                   </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => openDialog(task)}>
+                  <div className="flex gap-1 shrink-0">
+                    <Button variant="ghost" size="sm" onClick={() => openDialog(task)} className="text-xs sm:text-sm">
                       Edit
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(task.id)}>
@@ -281,6 +488,14 @@ export default function TasksList({
                 <div className="space-y-3">
                   {task.description && <p className="text-sm text-muted-foreground">{task.description}</p>}
                   <div className="flex flex-wrap gap-4 text-sm">
+                    {task.team_members && (
+                      <div className="flex items-center gap-1.5">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <Badge variant="secondary">
+                          {task.team_members.full_name || task.team_members.email}
+                        </Badge>
+                      </div>
+                    )}
                     {task.owner && (
                       <div className="flex items-center gap-1.5">
                         <User className="h-4 w-4 text-muted-foreground" />
@@ -298,6 +513,21 @@ export default function TasksList({
                     <div className="text-sm">
                       <span className="font-semibold">Standard: </span>
                       <span className="text-muted-foreground">{task.standard}</span>
+                    </div>
+                  )}
+                  <div className="pt-2 border-t">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setExpandedTask(expandedTask === task.id ? null : task.id)}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Comments
+                    </Button>
+                  </div>
+                  {expandedTask === task.id && (
+                    <div className="mt-4">
+                      <TaskComments taskId={task.id} userId={userId} />
                     </div>
                   )}
                 </div>

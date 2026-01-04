@@ -1,8 +1,8 @@
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import DailyReviewsList from "@/components/reviews/daily-reviews-list"
 import WeeklyReviewsList from "@/components/reviews/weekly-reviews-list"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
 
 export default async function ReviewsPage() {
   const supabase = await createClient()
@@ -33,16 +33,16 @@ export default async function ReviewsPage() {
     .order("week_start", { ascending: false })
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Review Systems</h1>
-        <p className="text-muted-foreground">Track your daily progress and conduct weekly strategic reviews</p>
+    <div className="container mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4 max-w-7xl">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Review Systems</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">Track your daily progress and conduct weekly strategic reviews</p>
       </div>
 
       <Tabs defaultValue="weekly" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="weekly">Weekly Reviews</TabsTrigger>
-          <TabsTrigger value="daily">Daily History</TabsTrigger>
+          <TabsTrigger value="weekly" className="text-xs sm:text-sm">Weekly Reviews</TabsTrigger>
+          <TabsTrigger value="daily" className="text-xs sm:text-sm">Daily History</TabsTrigger>
         </TabsList>
 
         <TabsContent value="weekly" className="mt-6">

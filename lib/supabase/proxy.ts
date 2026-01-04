@@ -29,8 +29,16 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Debug logging (remove in production)
+  if (process.env.NODE_ENV === "development") {
+    console.log(`[Proxy] Path: ${request.nextUrl.pathname}, User: ${user ? user.email : "none"}`)
+  }
+
   // Redirect to login if accessing protected routes without auth
   if (request.nextUrl.pathname.startsWith("/dashboard") && !user) {
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[Proxy] Redirecting to login - no user found`)
+    }
     const url = request.nextUrl.clone()
     url.pathname = "/auth/login"
     return NextResponse.redirect(url)

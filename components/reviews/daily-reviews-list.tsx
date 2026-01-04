@@ -1,7 +1,7 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CheckCircle2, Circle } from "lucide-react"
 
 interface DailyReview {
@@ -34,22 +34,22 @@ export default function DailyReviewsList({ dailyReviews }: { dailyReviews: Daily
         return (
           <Card key={review.id}>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="flex items-center gap-2 sm:gap-3">
                     {review.evening_completed ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 shrink-0" />
                     ) : (
-                      <Circle className="h-5 w-5 text-muted-foreground" />
+                      <Circle className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground shrink-0" />
                     )}
-                    <span>{dayName}</span>
+                    <span className="truncate">{dayName}</span>
                   </CardTitle>
-                  <CardDescription>{dateStr}</CardDescription>
+                  <CardDescription className="text-xs sm:text-sm">{dateStr}</CardDescription>
                 </div>
                 {review.evening_completed ? (
-                  <Badge className="bg-green-500">Completed</Badge>
+                  <Badge className="bg-green-500 shrink-0 text-xs sm:text-sm">Completed</Badge>
                 ) : (
-                  <Badge variant="outline">Incomplete</Badge>
+                  <Badge variant="outline" className="shrink-0 text-xs sm:text-sm">Incomplete</Badge>
                 )}
               </div>
             </CardHeader>

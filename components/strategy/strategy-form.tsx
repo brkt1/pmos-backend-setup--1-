@@ -2,15 +2,15 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 import { X } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 interface StrategyFormProps {
   initialData?: {
@@ -168,7 +168,7 @@ export default function StrategyForm({ initialData, userId }: StrategyFormProps)
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   placeholder="Add a risk..."
                   value={newRisk}
@@ -179,8 +179,9 @@ export default function StrategyForm({ initialData, userId }: StrategyFormProps)
                       handleAddRisk()
                     }
                   }}
+                  className="flex-1"
                 />
-                <Button type="button" onClick={handleAddRisk}>
+                <Button type="button" onClick={handleAddRisk} className="w-full sm:w-auto shrink-0">
                   Add
                 </Button>
               </div>
@@ -202,11 +203,11 @@ export default function StrategyForm({ initialData, userId }: StrategyFormProps)
 
         {error && <p className="text-sm text-red-500">{error}</p>}
 
-        <div className="flex gap-4">
-          <Button type="submit" size="lg" disabled={isLoading}>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Button type="submit" size="lg" disabled={isLoading} className="w-full sm:w-auto">
             {isLoading ? "Saving..." : initialData?.id ? "Update Strategy" : "Create Strategy"}
           </Button>
-          <Button type="button" variant="outline" size="lg" onClick={() => router.back()}>
+          <Button type="button" variant="outline" size="lg" onClick={() => router.back()} className="w-full sm:w-auto">
             Cancel
           </Button>
         </div>
