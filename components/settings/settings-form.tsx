@@ -9,8 +9,10 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { createClient } from "@/lib/supabase/client"
 import { Bell, Monitor, Moon, Sun, User } from "lucide-react"
+import { useTheme } from "next-themes"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 interface Settings {
   user_id: string
@@ -36,48 +38,140 @@ export default function SettingsForm({
   profile: Profile | null
   userId: string
 }) {
+  const { theme: currentTheme, setTheme: setThemeMode } = useTheme()
   const [emailNotifications, setEmailNotifications] = useState(settings?.email_notifications ?? true)
   const [taskReminders, setTaskReminders] = useState(settings?.task_reminders ?? true)
   const [reminderTime, setReminderTime] = useState(settings?.reminder_time?.slice(0, 5) || "09:00")
-  const [theme, setTheme] = useState(settings?.theme || "system")
+  const [theme, setTheme] = useState(settings?.theme || currentTheme || "system")
   const [fullName, setFullName] = useState(profile?.full_name || "")
   const [timezone, setTimezone] = useState(profile?.timezone || "UTC")
+  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
-  const handleSaveSettings = async () => {
-    const supabase = createClient()
+  // Sync theme with next-themes when settings load or theme changes
+  useEffect(() => {
+    if (settings?.theme) {
+      // Load saved theme preference
+      if (settings.theme !== currentTheme) {
+        setThemeMode(settings.theme)
+      }
+      setTheme(settings.theme)
+    } else if (currentTheme) {
+      // Use current theme if no saved preference
+      setTheme(currentTheme)
+    }
+  }, [settings?.theme, setThemeMode])
 
-    // Save user settings
+  // Update local state when theme changes externally
+  useEffect(() => {
+    if (currentTheme && currentTheme !== theme) {
+      setTheme(currentTheme)
+    }
+  }, [currentTheme])
+
+  // Update theme mode when user selects a new theme and auto-save
+  const handleThemeChange = async (newTheme: string) => {
+    setTheme(newTheme)
+    setThemeMode(newTheme)
+    
+    // Auto-save theme preference
+    const supabase = createClient()
     const settingsData = {
       user_id: userId,
       email_notifications: emailNotifications,
       task_reminders: taskReminders,
       reminder_time: reminderTime,
-      theme,
+      theme: newTheme,
     }
 
-    if (settings) {
-      await supabase.from("user_settings").update(settingsData).eq("user_id", userId)
-    } else {
-      await supabase.from("user_settings").insert(settingsData)
+    try {
+      if (settings) {
+        await supabase.from("user_settings").update(settingsData).eq("user_id", userId)
+      } else {
+        await supabase.from("user_settings").insert(settingsData)
+      }
+    } catch (error) {
+      console.error("Error auto-saving theme:", error)
     }
+  }
 
-    // Save profile
-    await supabase
-      .from("users")
-      .update({
-        full_name: fullName || null,
-        timezone,
-      })
-      .eq("id", userId)
+  const handleSaveSettings = async () => {
+    setIsLoading(true)
+    const supabase = createClient()
 
-    router.refresh()
+    try {
+      // Save user settings
+      const settingsData = {
+        user_id: userId,
+        email_notifications: emailNotifications,
+        task_reminders: taskReminders,
+        reminder_time: reminderTime,
+        theme: theme || currentTheme || "system",
+      }
+
+      if (settings) {
+        const { error } = await supabase.from("user_settings").update(settingsData).eq("user_id", userId)
+        if (error) throw error
+      } else {
+        const { error } = await supabase.from("user_settings").insert(settingsData)
+        if (error) throw error
+      }
+
+      // Save profile
+      const { error: profileError } = await supabase
+        .from("users")
+        .update({
+          full_name: fullName || null,
+          timezone,
+        })
+        .eq("id", userId)
+
+      if (profileError) throw profileError
+
+      // Apply theme immediately
+      if (theme) {
+        setThemeMode(theme)
+      }
+
+      toast.success("Settings saved successfully")
+      router.refresh()
+    } catch (error) {
+      console.error("Error saving settings:", error)
+      toast.error("Failed to save settings. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSaveProfile = async () => {
+    setIsLoading(true)
+    const supabase = createClient()
+
+    try {
+      const { error } = await supabase
+        .from("users")
+        .update({
+          full_name: fullName || null,
+          timezone,
+        })
+        .eq("id", userId)
+
+      if (error) throw error
+      toast.success("Profile updated successfully")
+      router.refresh()
+    } catch (error) {
+      console.error("Error saving profile:", error)
+      toast.error("Failed to save profile. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <Tabs defaultValue="profile" className="w-full">
-      <TabsList className="grid w-full max-w-md grid-cols-2">
+      <TabsList className="grid w-full max-w-2xl grid-cols-3">
         <TabsTrigger value="profile" className="text-xs sm:text-sm">Profile</TabsTrigger>
+        <TabsTrigger value="appearance" className="text-xs sm:text-sm">Appearance</TabsTrigger>
         <TabsTrigger value="notifications" className="text-xs sm:text-sm">Notifications</TabsTrigger>
       </TabsList>
 
@@ -123,7 +217,56 @@ export default function SettingsForm({
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleSaveSettings}>Save Profile</Button>
+            <Button onClick={handleSaveProfile} disabled={isLoading}>
+              {isLoading ? "Saving..." : "Save Profile"}
+            </Button>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="appearance" className="mt-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Monitor className="h-5 w-5" />
+              <CardTitle>Appearance Settings</CardTitle>
+            </div>
+            <CardDescription>Customize the look and feel of the application</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid gap-2">
+              <Label htmlFor="theme">Theme</Label>
+              <Select value={theme || currentTheme || "system"} onValueChange={handleThemeChange}>
+                <SelectTrigger id="theme">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="system">
+                    <div className="flex items-center gap-2">
+                      <Monitor className="h-4 w-4" />
+                      System (Follows your device)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="light">
+                    <div className="flex items-center gap-2">
+                      <Sun className="h-4 w-4" />
+                      Light
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="dark">
+                    <div className="flex items-center gap-2">
+                      <Moon className="h-4 w-4" />
+                      Dark
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Theme changes are applied immediately</p>
+            </div>
+
+            <Button onClick={handleSaveSettings} disabled={isLoading}>
+              {isLoading ? "Saving..." : "Save Appearance Settings"}
+            </Button>
           </CardContent>
         </Card>
       </TabsContent>
@@ -171,39 +314,13 @@ export default function SettingsForm({
                   value={reminderTime}
                   onChange={(e) => setReminderTime(e.target.value)}
                 />
+                <p className="text-xs text-muted-foreground">Time in your selected timezone</p>
               </div>
             )}
 
-            <div className="grid gap-2">
-              <Label htmlFor="theme">Theme</Label>
-              <Select value={theme} onValueChange={setTheme}>
-                <SelectTrigger id="theme">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="system">
-                    <div className="flex items-center gap-2">
-                      <Monitor className="h-4 w-4" />
-                      System
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="light">
-                    <div className="flex items-center gap-2">
-                      <Sun className="h-4 w-4" />
-                      Light
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="dark">
-                    <div className="flex items-center gap-2">
-                      <Moon className="h-4 w-4" />
-                      Dark
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button onClick={handleSaveSettings}>Save Settings</Button>
+            <Button onClick={handleSaveSettings} disabled={isLoading}>
+              {isLoading ? "Saving..." : "Save Notification Settings"}
+            </Button>
           </CardContent>
         </Card>
       </TabsContent>
