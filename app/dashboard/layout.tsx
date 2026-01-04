@@ -1,4 +1,5 @@
 import { MobileNav } from "@/components/dashboard/mobile-nav"
+import NotificationBell from "@/components/notifications/notification-bell"
 import { SidebarNav } from "@/components/dashboard/sidebar-nav"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
@@ -39,6 +40,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </div>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
+            <NotificationBell userId={user.id} />
             <div className="hidden sm:block text-sm">
               <span className="text-muted-foreground">Signed in as </span>
               <span className="font-semibold truncate max-w-[120px] md:max-w-none inline-block">{user.email}</span>

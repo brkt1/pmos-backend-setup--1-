@@ -2,6 +2,7 @@
 
 import type React from "react"
 
+import TaskActivityLog from "@/components/tasks/task-activity-log"
 import TaskComments from "@/components/tasks/task-comments"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -19,7 +20,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
-import { Calendar, Download, Filter, MessageSquare, Plus, Search, Trash2, User, X } from "lucide-react"
+import { Activity, Calendar, Download, Filter, MessageSquare, Plus, Search, Trash2, User, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
@@ -50,15 +51,26 @@ interface TeamMember {
   full_name: string | null
 }
 
+interface TaskTemplate {
+  id: string
+  name: string
+  title: string
+  description: string | null
+  standard: string | null
+  priority: string
+}
+
 export default function TasksList({
   tasks,
   projects,
   teamMembers,
+  templates,
   userId,
 }: {
   tasks: Task[]
   projects: Project[]
   teamMembers: TeamMember[]
+  templates: TaskTemplate[]
   userId: string
 }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -78,9 +90,21 @@ export default function TasksList({
   const [priorityFilter, setPriorityFilter] = useState<string>("all")
   const [projectFilter, setProjectFilter] = useState<string>("all")
   const [expandedTask, setExpandedTask] = useState<string | null>(null)
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("")
   const router = useRouter()
 
-  const openDialog = (task?: Task) => {
+  const loadTemplate = (templateId: string) => {
+    const template = templates.find((t) => t.id === templateId)
+    if (template) {
+      setTitle(template.title)
+      setDescription(template.description || "")
+      setStandard(template.standard || "")
+      setPriority(template.priority)
+      setSelectedTemplate(templateId)
+    }
+  }
+
+  const openDialog = (task?: Task, templateId?: string) => {
     if (task) {
       setEditingTask(task)
       setTitle(task.title)
@@ -105,6 +129,10 @@ export default function TasksList({
       setProjectId("")
       setAssignedTo("")
       setPriority("medium")
+      setSelectedTemplate("")
+    }
+    if (templateId) {
+      loadTemplate(templateId)
     }
     setIsDialogOpen(true)
   }
@@ -243,6 +271,24 @@ export default function TasksList({
               <DialogDescription>Define task details with clear ownership and deadlines</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {templates.length > 0 && !editingTask && (
+                <div className="grid gap-2">
+                  <Label htmlFor="template">Create from Template (Optional)</Label>
+                  <Select value={selectedTemplate} onValueChange={loadTemplate}>
+                    <SelectTrigger id="template">
+                      <SelectValue placeholder="Select a template..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">None - Create from scratch</SelectItem>
+                      {templates.map((template) => (
+                        <SelectItem key={template.id} value={template.id}>
+                          {template.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="grid gap-2">
                 <Label htmlFor="title">Task Title</Label>
                 <Input
@@ -515,7 +561,7 @@ export default function TasksList({
                       <span className="text-muted-foreground">{task.standard}</span>
                     </div>
                   )}
-                  <div className="pt-2 border-t">
+                  <div className="pt-2 border-t flex gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -524,10 +570,19 @@ export default function TasksList({
                       <MessageSquare className="h-4 w-4 mr-2" />
                       Comments
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setExpandedTask(expandedTask === task.id ? null : task.id)}
+                    >
+                      <Activity className="h-4 w-4 mr-2" />
+                      Activity
+                    </Button>
                   </div>
                   {expandedTask === task.id && (
-                    <div className="mt-4">
+                    <div className="mt-4 space-y-4">
                       <TaskComments taskId={task.id} userId={userId} />
+                      <TaskActivityLog taskId={task.id} />
                     </div>
                   )}
                 </div>

@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { BarChart3, Calendar, CheckSquare, LayoutDashboard, Menu, Settings, Target, TrendingUp, Users } from "lucide-react"
+import { BarChart3, Bell, Calendar, CheckSquare, FileText, LayoutDashboard, Menu, Repeat, Settings, Target, TrendingUp, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
@@ -16,6 +16,9 @@ const navItems = [
   { href: "/dashboard/team", label: "Team Management", icon: Users },
   { href: "/dashboard/calendar", label: "Calendar", icon: Calendar },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/dashboard/recurring-tasks", label: "Recurring Tasks", icon: Repeat },
+  { href: "/dashboard/templates", label: "Templates", icon: FileText },
+  { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ]
 

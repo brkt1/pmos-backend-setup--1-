@@ -39,6 +39,13 @@ export default async function ExecutionPage() {
     .eq("status", "active")
     .order("full_name", { ascending: true })
 
+  // Get task templates
+  const { data: templates } = await supabase
+    .from("task_templates")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("name", { ascending: true })
+
   return (
     <div className="container mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4 max-w-7xl">
       <div className="mb-6 sm:mb-8">
@@ -57,6 +64,7 @@ export default async function ExecutionPage() {
             tasks={tasks || []}
             projects={projects || []}
             teamMembers={teamMembers || []}
+            templates={templates || []}
             userId={user.id}
           />
         </TabsContent>
