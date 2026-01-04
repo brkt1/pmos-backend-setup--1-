@@ -12,6 +12,24 @@ export default async function DashboardPage() {
     redirect("/auth/login")
   }
 
+  // Check if user is a team member only (not a manager)
+  const { data: teamMember } = await supabase
+    .from("team_members")
+    .select("id")
+    .eq("user_id", user.id)
+    .single()
+
+  const { data: isManager } = await supabase
+    .from("users")
+    .select("id")
+    .eq("id", user.id)
+    .single()
+
+  // Redirect team members to their dashboard
+  if (teamMember && !isManager) {
+    redirect("/dashboard/team-member")
+  }
+
   const today = new Date().toISOString().split("T")[0]
 
   // Get or create today's dashboard

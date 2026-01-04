@@ -115,18 +115,40 @@ export default function TeamManagement({ roles, teamMembers, userId }: TeamManag
     e.preventDefault()
     const supabase = createClient()
 
-    const memberData = {
-      manager_id: userId,
-      email: memberEmail,
-      full_name: memberName || null,
-      role_id: memberRoleId || null,
-      status: memberStatus,
-    }
-
     if (editingMember) {
+      const memberData = {
+        email: memberEmail,
+        full_name: memberName || null,
+        role_id: memberRoleId || null,
+        status: memberStatus,
+      }
       await supabase.from("team_members").update(memberData).eq("id", editingMember.id)
     } else {
-      await supabase.from("team_members").insert(memberData)
+      // Generate invite token for new members
+      // Create a random token
+      const inviteToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("")
+      
+      const memberData = {
+        manager_id: userId,
+        email: memberEmail,
+        full_name: memberName || null,
+        role_id: memberRoleId || null,
+        status: memberStatus,
+        invite_token: inviteToken,
+        invited_at: new Date().toISOString(),
+      }
+      
+      const { data, error } = await supabase.from("team_members").insert(memberData).select().single()
+      
+      if (!error && data) {
+        // Generate invite URL
+        const inviteUrl = `${window.location.origin}/auth/accept-invite?token=${inviteToken}`
+        alert(`Team member invited! Share this link:\n\n${inviteUrl}\n\nThe team member can use this link to create their account and join your team.`)
+      } else if (error) {
+        alert(`Error: ${error.message}`)
+      }
     }
 
     setIsMemberDialogOpen(false)
