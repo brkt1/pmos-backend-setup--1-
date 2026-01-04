@@ -21,10 +21,10 @@ export default async function CalendarPage() {
     .order("deadline", { ascending: true })
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Calendar View</h1>
-        <p className="text-muted-foreground">View your tasks and deadlines on a calendar</p>
+    <div className="container mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4 max-w-7xl">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Calendar View</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">View your tasks and deadlines on a calendar</p>
       </div>
 
       <CalendarView tasks={tasks || []} />

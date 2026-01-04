@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Calendar, CheckSquare, LayoutDashboard, Settings, Target, TrendingUp, Users } from "lucide-react"
+import { BarChart3, Calendar, CheckSquare, LayoutDashboard, Settings, Target, TrendingUp, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -13,6 +13,7 @@ const navItems = [
   { href: "/dashboard/reviews", label: "Reviews", icon: Calendar },
   { href: "/dashboard/team", label: "Team Management", icon: Users },
   { href: "/dashboard/calendar", label: "Calendar", icon: Calendar },
+  { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ]
 
